@@ -53,6 +53,7 @@ class Wiki {
                         timestamp: this.pageInfoCache[title].timestamp,
                         revisionId: this.pageInfoCache[title].revid,
                         contentmodel: this.pageInfoCache[title].contentmodel,
+                        latestRevisionId: this.pageInfoCache[title].latestRevisionId,
                     };
                 }
                 params.titles = title;
@@ -61,6 +62,8 @@ class Wiki {
             if (response.query && response.query.pages) {
                 const pageKey = Object.keys(response.query.pages)[0];
                 const contentmodel = response.query.pages[pageKey].contentmodel;
+                const latestRevisionId = response.query.pages[pageKey].lastrevid;
+                
                 if (pageKey === "-1") {
                     // 不存在这一页面
                     // Page not found.
@@ -71,12 +74,17 @@ class Wiki {
                 }
                 const pageInfo = response.query.pages[pageKey].revisions[0];
                 if (title) {
-                    this.pageInfoCache[title] = { ...pageInfo, contentmodel };
+                    this.pageInfoCache[title] = { 
+                        ...pageInfo, 
+                        contentmodel,
+                        latestRevisionId
+                    };
                 }
                 return {
                     timestamp: pageInfo.timestamp,
                     revisionId: pageInfo.revid,
                     contentmodel: contentmodel,
+                    latestRevisionId: latestRevisionId,
                 };
             }
         } catch (e) {
@@ -90,16 +98,28 @@ class Wiki {
      * @param {object} config
      * @param {string} config.revisionId 版本号
      * @param {string} config.section 段落号
+     * @param {string} config.latestRevisionId 最新版本号
      * @return {Promise<string>} wikitext内容
      */
-    async getWikiText({ section, revisionId }) {
+    async getWikiText({ section, title, revisionId, latestRevisionId }) {
         try {
-            const response = await (
-                await fetch(
-                    `${location.protocol}//${location.host}${Constants.scriptPath}/index.php?oldid=${revisionId}&section=${section}&action=raw`
-                )
-            ).text();
-            return response;
+            const params = {
+                format: "json",
+                action: "parse",
+                prop: "wikitext",
+            };
+            if (revisionId === latestRevisionId) {
+                params.page = title;
+            } else {
+                params.oldid = revisionId;
+            }
+            if (section) {
+                params.section = section;
+            }
+            const response = await requests.get(params);
+            if (response.parse && response.parse.wikitext) {
+                return response.parse.wikitext["*"];
+            }
         } catch (e) {
             Log.error("fail_to_get_wikitext");
         }
@@ -180,8 +200,8 @@ class Wiki {
      * @param {*} title
      */
     async getLatestRevisionIdForPage(title) {
-        const { revisionId } = await this.getPageInfo({ title });
-        return revisionId;
+        const { latestRevisionId } = await this.getPageInfo({ title });
+        return latestRevisionId;
     }
 }
 

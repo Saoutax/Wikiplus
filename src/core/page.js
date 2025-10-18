@@ -98,9 +98,12 @@ class Page {
         if (this.sectionCache[sec]) {
             return this.sectionCache[sec];
         }
+        const latestRevisionId = await Wiki.getLatestRevisionIdForPage(this.title);
         const wikiText = await Wiki.getWikiText({
             section: sec,
+            title: this.title,
             revisionId: this.revisionId,
+            latestRevisionId: latestRevisionId,
         });
         Log.info(`Wikitext of ${this.title}#${section} fetched.`);
         this.sectionCache[sec] = wikiText;
