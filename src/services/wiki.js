@@ -63,7 +63,7 @@ class Wiki {
                 const pageKey = Object.keys(response.query.pages)[0];
                 const contentmodel = response.query.pages[pageKey].contentmodel;
                 const latestRevisionId = response.query.pages[pageKey].lastrevid;
-                
+
                 if (pageKey === "-1") {
                     // 不存在这一页面
                     // Page not found.
@@ -74,10 +74,10 @@ class Wiki {
                 }
                 const pageInfo = response.query.pages[pageKey].revisions[0];
                 if (title) {
-                    this.pageInfoCache[title] = { 
-                        ...pageInfo, 
+                    this.pageInfoCache[title] = {
+                        ...pageInfo,
                         contentmodel,
-                        latestRevisionId
+                        latestRevisionId,
                     };
                 }
                 return {
@@ -105,20 +105,25 @@ class Wiki {
         try {
             const params = {
                 format: "json",
-                action: "parse",
-                prop: "wikitext",
+                action: "query",
+                prop: "revisions",
+                rvprop: "content",
             };
             if (revisionId === latestRevisionId) {
-                params.page = title;
+                params.titles = title;
             } else {
-                params.oldid = revisionId;
+                params.revids = revisionId;
             }
             if (section) {
-                params.section = section;
+                params.rvsection = section;
             }
             const response = await requests.get(params);
-            if (response.parse && response.parse.wikitext) {
-                return response.parse.wikitext["*"];
+            if (response.query && response.query.pages) {
+                const pageKey = Object.keys(response.query.pages)[0];
+                const page = response.query.pages[pageKey];
+                if (page.revisions && page.revisions[0]) {
+                    return page.revisions[0]["*"];
+                }
             }
         } catch (e) {
             Log.error("fail_to_get_wikitext");
