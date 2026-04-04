@@ -20,6 +20,10 @@
     text-align: center;
     cursor: pointer;
 }
+html.dark .Wikiplus-Btn,
+html.skin-theme-clientpref-night .Wikiplus-Btn {
+    background-color: #1A1A1A;
+}
 .Wikiplus-Btn a {
     position: relative;
     display: block;
@@ -40,6 +44,10 @@
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+}
+html.dark .Wikiplus-InterBox,
+html.skin-theme-clientpref-night .Wikiplus-InterBox {
+    background-color: #1A2F2F;
 }
 .Wikiplus-InterBox-Header {
     position: relative;
@@ -237,4 +245,8 @@
     font-weight: bold;
     font-size: smaller;
     transform: translateY(-2px);
+}
+html.dark #Wikiplus-Quickedit-Jump a,
+html.skin-theme-clientpref-night  #Wikiplus-Quickedit-Jump a {
+    color: white;
 }
